@@ -10,12 +10,7 @@ let PDFCanvas = require('./lib/pdfcanvas.js');
 
 let pdfParser = new PDFParser(this, 1);
 
-// filePath = "./pdf-parser/pdfFiles/ebf4cd_0.pdf";
 // filePath = "./69141d_0(1).pdf";
-filePath = "./Atlas of Histology with Functional Correlations ( PDFDrive.com ) (1).pdf";
-// filePath = "./pdf-p  arser/pdfFiles/effective-performance-engineering.pdf";
-// filePath = "./pdf-parser/pdfFiles/ebf4bd_0.pdf";
-// filePath = "./pdf-parser/pdfFiles/deep_learning.pdf";
 
 pdfParser.on("pdfParser_dataError", errData => console.error(errData.parserError) );
 pdfParser.on("pdfParser_dataReady", async pdfData => {
