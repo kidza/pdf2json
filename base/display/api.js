@@ -108,7 +108,7 @@ PDFJS.postMessageTransfers = PDFJS.postMessageTransfers === undefined ?
  *  - password - For decrypting password-protected PDFs.
  *  - initialData - A typed array with the first portion or all of the pdf data.
  *                  Used by the extension since some data is already loaded
- *                  before the switch to range requests. 
+ *                  before the switch to range requests.
  *
  * @param {object} pdfDataRangeTransport is optional. It is used if you want
  * to manually serve range requests for data in the PDF. See viewer.js for
@@ -862,8 +862,8 @@ var WorkerTransport = (function WorkerTransportClosure() {
           promise.resolve({ data: buf, width: width, height: height});
         }).bind(this);
 //MQZ. Oct.17.2012 - disable image drawing
-//          img.src = imageUrl;
-          img.src = 'data:image/jpeg;base64,' + img.btoa(imageUrl);
+         img.src = imageUrl;
+          // img.src = 'data:image/jpeg;base64,' + img.btoa(imageUrl);
       });
     },
 
