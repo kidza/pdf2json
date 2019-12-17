@@ -237,6 +237,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                                 resources, image, inline, operatorList) {
       var self = this;
       var dict = image.dict;
+      let x = dict.get('position', 'X');
+
       var w = dict.get('Width', 'W');
       var h = dict.get('Height', 'H');
 

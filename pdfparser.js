@@ -1,5 +1,7 @@
 'use strict';
 
+process.setMaxListeners(0);
+
 let fs = require('fs'),
 	stream = require('stream'),
 	nodeUtil = require("util"),
@@ -37,14 +39,36 @@ let PDFParser = (function () {
 		this.emit("pdfParser_dataError", {"parserError": data});
 	};
 
+	let _onPDFJSNonRenderingDataReady = function(data) {
+		if (!data) { //v1.1.2: data===null means end of parsed data
+			nodeUtil.p2jinfo("PDF parsing completed.");
+			let output = {"data": this.data};
+			this.emit("pdfParser_nonRenderingDataReady", output);
+		}
+		else {
+			Object.assign(this.data, data);
+		}
+	}
+
 	let _startParsingPDF = function(buffer) {
 		this.data = {};
 
 		this.PDFJS.on("pdfjs_parseDataReady", _onPDFJSParseDataReady.bind(this));
 		this.PDFJS.on("pdfjs_parseDataError", _onPDFJSParserDataError.bind(this));
 
-		this.PDFJS.parsePDFData(buffer || _binBuffer[this.pdfFilePath]);
+		this.PDFJS.parsePDFData(buffer || _binBuffer[this.pdfFilePath], this.range );
 	};
+
+	let _getNumberOfPages = function(err, data) {
+		_binBuffer[this.pdfFilePath] = data;
+
+		this.data = {};
+
+		this.PDFJS.on("pdfjs_nonRenderingDataReady", _onPDFJSNonRenderingDataReady.bind(this));
+		this.PDFJS.on("pdfjs_parseDataError", _onPDFJSParserDataError.bind(this));
+
+		this.PDFJS.getNumberOfPages(_binBuffer[this.pdfFilePath]);
+	}
 
 	let _processBinaryCache = function() {
 		if (_.has(_binBuffer, this.pdfFilePath)) {
@@ -88,7 +112,7 @@ let PDFParser = (function () {
     function PdfParser(context, needRawText) {
 		//call constructor for super class
 	    stream.Transform.call(this, {objectMode: true, bufferSize: 64 * 1024});
-	
+
         // private
         let _id = _nextId++;
 
@@ -130,8 +154,9 @@ let PDFParser = (function () {
 		nodeUtil.verbosity(verbosity || 0);
 	};
 
-	PdfParser.prototype.loadPDF = function(pdfFilePath, verbosity) {
+	PdfParser.prototype.loadPDF = function(pdfFilePath, verbosity, begin, end) {
 		this.setVerbosity(verbosity);
+		this.range = [ begin, end ];
 		nodeUtil.p2jinfo("about to load PDF file " + pdfFilePath);
 
 		this.pdfFilePath = pdfFilePath;
@@ -144,6 +169,11 @@ let PDFParser = (function () {
 
 		this.fq.push({path: pdfFilePath}, _processPDFContent.bind(this));
 	};
+
+	PdfParser.prototype.getNumberOfPagesFromDocument = function(pdfFilePath) {
+		this.pdfFilePath = pdfFilePath;
+		this.fq.push({path: pdfFilePath}, _getNumberOfPages.bind(this));
+	}
 
 	// Introduce a way to directly process buffers without the need to write it to a temporary file
 	PdfParser.prototype.parseBuffer = function(pdfBuffer) {
